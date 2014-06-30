@@ -16,9 +16,7 @@
 
 int main()
 {
-    Vector<std::string> v(2);
-    v[0]="Hello, ";
-    v[1]="world!";
+    Vector<std::string> v{"Hello,"," world!"};
     for (auto &e: v) {
         std::cout << e;
     }

@@ -20,6 +20,9 @@ class Cpp11Test : public CppUnit::TestCase
     CPPUNIT_TEST_SUITE(Cpp11Test);
     CPPUNIT_TEST(testStaticAssert);
     CPPUNIT_TEST(testRangeFor);
+    CPPUNIT_TEST_EXCEPTION(testConstructLength,std::length_error);
+    CPPUNIT_TEST_EXCEPTION(testUnderflow,std::out_of_range);
+    CPPUNIT_TEST_EXCEPTION(testOverflow,std::out_of_range);
     CPPUNIT_TEST_SUITE_END();
 
   public:
@@ -40,6 +43,19 @@ class Cpp11Test : public CppUnit::TestCase
     void testStaticAssert();
 
     void testRangeFor();
+
+    void testConstructLength() {
+        Vector<int> v(-1);
+    }
+
+    void testUnderflow() {
+        Vector<int> v(1);
+        v[-1]=0;
+    }
+    void testOverflow() {
+        Vector<int> v(1);
+        v[1]=0;
+    }
 
   private:
     Cpp11Test(const Cpp11Test &a)=default;
@@ -64,8 +80,14 @@ void Cpp11Test::testRangeFor()
     v[1]="two";
     v[2]="three";
 
+    int n=0;
     for (auto &e: v) {
-        std::cout << e << std::endl;
+        switch(n++) {
+            case 0: CPPUNIT_ASSERT(e=="one"); break;
+            case 1: CPPUNIT_ASSERT(e=="two"); break;
+            case 2: CPPUNIT_ASSERT(e=="three"); break;
+            default: throw std::out_of_range("Cpp11Test::testRangeFor");
+        }
     }
 }
 

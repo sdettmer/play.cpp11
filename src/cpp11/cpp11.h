@@ -20,8 +20,20 @@ public:
     Vector()
         : elem{nullptr} { }
 
-    explicit Vector(size_t size)
-        : elem{new T[size]}, sz{size} { }
+    explicit Vector(int size)
+        : sz{static_cast<size_t>(size)}
+    {
+       if (size<0) {
+          throw std::length_error("constructing Vector");
+       }
+       elem=new T[size];
+    }
+
+    Vector(std::initializer_list<T> list)
+       : elem{new T[list.size()]}, sz{list.size()}
+    {
+       copy(list.begin(), list.end(), elem);
+    }
 
     Vector(const Vector<T> &v)
         : elem{new T[v.s]}, sz{v.sz} { }
