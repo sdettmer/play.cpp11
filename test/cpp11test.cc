@@ -19,10 +19,11 @@ class Cpp11Test : public CppUnit::TestCase
     // Define the test suite (simply one suite with all tests)
     CPPUNIT_TEST_SUITE(Cpp11Test);
     CPPUNIT_TEST(testStaticAssert);
-    CPPUNIT_TEST(testRangeFor);
+    CPPUNIT_TEST(testConstruct);
     CPPUNIT_TEST_EXCEPTION(testConstructLength,std::length_error);
     CPPUNIT_TEST_EXCEPTION(testUnderflow,std::out_of_range);
     CPPUNIT_TEST_EXCEPTION(testOverflow,std::out_of_range);
+    CPPUNIT_TEST(testRangeFor);
     CPPUNIT_TEST_SUITE_END();
 
   public:
@@ -42,7 +43,26 @@ class Cpp11Test : public CppUnit::TestCase
 
     void testStaticAssert();
 
-    void testRangeFor();
+    void testConstruct()
+    {
+        {
+            Vector<int> v(1);
+            v[0]=-1;
+        }
+        {
+            Vector<std::string> v(1);
+            v[0]="hello";
+        }
+        {
+            Vector<char> v1{'a','b','c','d'};
+            Vector<char> v2{'A','B','C','D'};
+            Vector<Vector<char>> m(3);
+            m[0]=v1;
+            m[1]=v2;
+            m[2]=v1;
+            CPPUNIT_ASSERT(m[1][2]=='C');
+        }
+    }
 
     void testConstructLength() {
         Vector<int> v(-1);
@@ -56,6 +76,8 @@ class Cpp11Test : public CppUnit::TestCase
         Vector<int> v(1);
         v[1]=0;
     }
+
+    void testRangeFor();
 
   private:
     Cpp11Test(const Cpp11Test &a)=default;
@@ -74,7 +96,6 @@ void Cpp11Test::testStaticAssert()
 
 void Cpp11Test::testRangeFor()
 {
-
     Vector<std::string> v(3);
     v[0]="one";
     v[1]="two";
