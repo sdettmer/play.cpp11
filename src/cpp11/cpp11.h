@@ -33,6 +33,10 @@ public:
         : elem{new T[list.size()]}, sz{list.size()}
     {
         std::copy(list.begin(), list.end(), elem);
+        // from Stroustrup FAQ: for std::vector<>:
+        // reserve(list.size());
+        // std::uninitialized_copy(list.begin(), list.end(), elem);
+        // sz=list.size();
     }
 
     Vector(const Vector<T> &v)

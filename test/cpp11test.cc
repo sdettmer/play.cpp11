@@ -14,6 +14,12 @@
 #include <stdexcept>
 #include <cppunit/extensions/HelperMacros.h>
 
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args)
+{
+    return std::unique_ptr<T>{new T {std::forward<Args>(args)...}};
+}
+
 class Cpp11Test : public CppUnit::TestCase
 {
     // Define the test suite (simply one suite with all tests)
@@ -24,6 +30,8 @@ class Cpp11Test : public CppUnit::TestCase
     CPPUNIT_TEST_EXCEPTION(testUnderflow,std::out_of_range);
     CPPUNIT_TEST_EXCEPTION(testOverflow,std::out_of_range);
     CPPUNIT_TEST(testRangeFor);
+    CPPUNIT_TEST(testUniquePtr);
+    CPPUNIT_TEST(testSharedPtr);
     CPPUNIT_TEST_SUITE_END();
 
   public:
@@ -79,6 +87,69 @@ class Cpp11Test : public CppUnit::TestCase
 
     void testRangeFor();
 
+    void testUniquePtr() {
+        {
+            auto p = new Vector<int>(1);
+            (*p)[0]=7;
+            {
+              std::unique_ptr<Vector<int> > up { p };
+              (*up)[0]++;
+            }
+            // should be deleted
+        }
+        {
+            auto up1 = make_unique<Vector<int> > (
+                std::initializer_list<int> {7});
+            {
+              {
+                  std::unique_ptr<Vector<int> > up2;
+                  up2.swap(up1);
+                  (*up2)[0]++;
+              }
+              // should be deleted
+            }
+        }
+    }
+
+    void testSharedPtr() {
+        {
+            auto p = new Vector<int>(1);
+            (*p)[0]=7;
+            {
+              std::shared_ptr<Vector<int> > sp1 { p };
+              (*sp1)[0]++;
+              {
+                  std::shared_ptr<Vector<int> > sp2 { sp1 };
+                  (*sp2)[0]++;
+              }
+              {
+                  std::shared_ptr<Vector<int> > sp3;
+                  sp3 = sp1;
+                  (*sp3)[0]++;
+              }
+              (*sp1)[0]++;
+              CPPUNIT_ASSERT((*p)[0]==11);
+            }
+        }
+        {
+            auto sp1 = std::make_shared<Vector<int> > (
+                std::initializer_list<int> {7});
+            {
+              {
+                  std::shared_ptr<Vector<int> > sp2 { sp1 };
+                  (*sp2)[0]++;
+              }
+              {
+                  std::shared_ptr<Vector<int> > sp3;
+                  sp3 = sp1;
+                  (*sp3)[0]++;
+              }
+              (*sp1)[0]++;
+              CPPUNIT_ASSERT((*sp1)[0]==10);
+            }
+        }
+    }
+
   private:
     Cpp11Test(const Cpp11Test &a)=default;
     Cpp11Test(Cpp11Test &&a)=default;
@@ -112,4 +183,4 @@ void Cpp11Test::testRangeFor()
     }
 }
 
-/* vim: set ts=4 sw=4 tw=76: */
+/* vim: set et ts=4 sw=4 tw=76: */
