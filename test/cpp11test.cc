@@ -19,6 +19,10 @@ std::unique_ptr<T> make_unique(Args&&... args)
 {
     return std::unique_ptr<T>{new T {std::forward<Args>(args)...}};
 }
+int add_one(const int value) { return value + 1; }
+int multiply3(const int a, const int b, const int c) { return a * b * c; }
+template<typename T>
+T mul3(const T a, const T b, const T c) { return a * b * c; }
 
 class Cpp11Test : public CppUnit::TestCase
 {
@@ -32,6 +36,7 @@ class Cpp11Test : public CppUnit::TestCase
     CPPUNIT_TEST(testRangeFor);
     CPPUNIT_TEST(testUniquePtr);
     CPPUNIT_TEST(testSharedPtr);
+    CPPUNIT_TEST(testBind);
     CPPUNIT_TEST_SUITE_END();
 
   public:
@@ -147,6 +152,49 @@ class Cpp11Test : public CppUnit::TestCase
               (*sp1)[0]++;
               CPPUNIT_ASSERT((*sp1)[0]==10);
             }
+        }
+    }
+
+    void testBind() {
+        {
+            auto five = std::bind(add_one,4);
+            CPPUNIT_ASSERT(five()==5);
+        }
+        {
+            using namespace std::placeholders;
+            auto twice = std::bind(multiply3,1,_1,2);
+            CPPUNIT_ASSERT(twice(4)==8);
+            auto multiply = std::bind(multiply3,_1,1,_2);
+            CPPUNIT_ASSERT(multiply(4,3)==12);
+        }
+        // Same using a function template.
+        {
+            using namespace std::placeholders;
+            auto multiply = std::bind(mul3<int>,_1,1,_2);
+            CPPUNIT_ASSERT(multiply(4,3)==12);
+        }
+        // Bind a member function via mem_fn().
+        {
+            std::string x;
+            // Because std::string::operator+=() is overloaded, we have to
+            // pick the right version by using a cast-to-member-function.
+            // prototype is "std::string& operator+=(const char *)",
+            // so we cast to a member function pointer to this type
+            // We pass a reference to x (otherwise, append() would work with
+            // own copy, not the x).
+            auto append = std::mem_fn(
+                (std::string& (std::string::*) (const char *))
+                &std::string::operator+=);
+            auto appendx = std::bind(append,std::ref(x),"x");
+            CPPUNIT_ASSERT(appendx()=="x");
+            CPPUNIT_ASSERT(appendx()=="xx");
+            CPPUNIT_ASSERT(x=="xx");
+
+            // Now muuuuch simpler using lambda expressions:
+            auto lambda = [&](){ x+="x"; return x; };
+            CPPUNIT_ASSERT(lambda()=="xxx");
+            CPPUNIT_ASSERT(lambda()=="xxxx");
+            CPPUNIT_ASSERT(x=="xxxx");
         }
     }
 
