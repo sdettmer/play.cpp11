@@ -20,3 +20,19 @@ testrunner_LDADD=libcpp11.a $(CPPUNIT_LIBS)
 # Administrativa.
 AUTOMAKE_OPTIONS = subdir-objects
 dist_noinst_SCRIPTS = autogen.sh
+
+
+#test -e $$stamp || touch $$stamp
+
+autotest:
+	@echo "Will run \`make check' after each change, stop with INT." ; \
+	while true ; do \
+	  if ! make --question -s -j4 testrunner ; then \
+	    echo "Rechecking..." ; \
+	      make -s check || { \
+	        echo "failed to run `date`" >> testrunner.log ; \
+	      } ; \
+	  fi ; \
+	  sleep 1 ; \
+	done
+
