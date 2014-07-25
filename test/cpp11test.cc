@@ -12,6 +12,7 @@
 #include <map>
 #include <exception>
 #include <stdexcept>
+#include <algorithm>
 #include <cppunit/extensions/HelperMacros.h>
 
 template<typename T, typename... Args>
@@ -37,6 +38,7 @@ class Cpp11Test : public CppUnit::TestCase
     CPPUNIT_TEST_EXCEPTION(testUnderflow,std::out_of_range);
     CPPUNIT_TEST_EXCEPTION(testOverflow,std::out_of_range);
     CPPUNIT_TEST(testRangeFor);
+    CPPUNIT_TEST(testEqualRange);
     CPPUNIT_TEST(testUniquePtr);
     CPPUNIT_TEST(testSharedPtr);
     CPPUNIT_TEST(testBind);
@@ -95,6 +97,30 @@ class Cpp11Test : public CppUnit::TestCase
     }
 
     void testRangeFor();
+
+    void testEqualRange() {
+        struct elem { std::string name; std::string stuff; };
+        std::vector<elem> v {
+            { "name1", "First name A."  },
+            { "name1", "First name B."  },
+            { "name2", "Second name A." },
+            { "name2", "Second name B." },
+            { "name3", "Third name A."  },
+            { "name3", "Third name B."  },
+        };
+        // Compare name part:
+        auto cmp_name = [] (const elem &a, const elem &b) {
+            return a.name < b.name;
+        };
+        // Get smart iterator finding name2 (by divinding into halfs)
+        elem search { "name2" };
+        auto get_name2 = std::equal_range(v.begin(), v.end(), search, cmp_name);
+
+        // Iterator shall give 2nd A and B and nothing more.
+        CPPUNIT_ASSERT(get_name2.first->stuff=="Second name A.");
+        CPPUNIT_ASSERT((get_name2.first+1)->stuff=="Second name B.");
+        CPPUNIT_ASSERT((get_name2.first+2)==get_name2.second);
+    }
 
     void testUniquePtr() {
         {
