@@ -86,6 +86,7 @@ class Cpp11Test : public CppUnit::TestCase
     CPPUNIT_TEST_SUITE(Cpp11Test);
     CPPUNIT_TEST(testStaticAssert);
     CPPUNIT_TEST(testEnumStruct);
+    CPPUNIT_TEST(testNoExcept);
     CPPUNIT_TEST(testConstruct);
     CPPUNIT_TEST_EXCEPTION(testConstructLength,std::length_error);
     CPPUNIT_TEST_EXCEPTION(testUnderflow,std::out_of_range);
@@ -137,13 +138,25 @@ class Cpp11Test : public CppUnit::TestCase
 
         // Check is_same<> first.
         static_assert(std::is_same<char, char>::value, "not char 1");
+        // Newer style with function call operator:
+        static_assert(std::is_same<char, char>(), "not char 1");
 
         typedef std::underlying_type<new_enum_char_e>::type char_type;
         static_assert(std::is_same<char_type, char>::value, "not char 2");
+        // Newer style:
+        // Not working:
+        //   typedef std::underlying_type<new_enum_char_e>() char_type;
+        static_assert(std::is_same<char_type, char>(), "not char 2");
 
         typedef std::underlying_type<new_enum_uint8_t_101_e>::type uint8_type;
         static_assert(std::is_same<uint8_type, uint8_t>::value, "not uint8_t");
         CPPUNIT_ASSERT(static_cast<uint8_type>(new_enum_uint8_t_101) == 102);
+    }
+
+    void testNoExcept() noexcept {
+        // Just to check if it compiles.
+        // Any exception should lead to terminate() / abort():
+        // throw std::exception{};
     }
 
     void testConstruct() {
