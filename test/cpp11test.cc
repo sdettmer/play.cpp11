@@ -19,8 +19,11 @@ std::unique_ptr<T> make_unique(Args&&... args)
 {
     return std::unique_ptr<T>{new T {std::forward<Args>(args)...}};
 }
+
 int add_one(const int value) { return value + 1; }
+
 int multiply3(const int a, const int b, const int c) { return a * b * c; }
+
 template<typename T>
 T mul3(const T a, const T b, const T c) { return a * b * c; }
 
@@ -37,6 +40,7 @@ class Cpp11Test : public CppUnit::TestCase
     CPPUNIT_TEST(testUniquePtr);
     CPPUNIT_TEST(testSharedPtr);
     CPPUNIT_TEST(testBind);
+    CPPUNIT_TEST(testFunction);
     CPPUNIT_TEST_SUITE_END();
 
   public:
@@ -195,6 +199,28 @@ class Cpp11Test : public CppUnit::TestCase
             CPPUNIT_ASSERT(lambda()=="xxx");
             CPPUNIT_ASSERT(lambda()=="xxxx");
             CPPUNIT_ASSERT(x=="xxxx");
+        }
+    }
+
+    void testFunction() {
+        {
+            // f1 is a function returning an int and getting an int:
+            std::function<int(int)> f1 {add_one};
+            CPPUNIT_ASSERT(f1(5)==6);
+
+            f1 = [] (int value) { return value + 2; };
+            CPPUNIT_ASSERT(f1(5)==7);
+
+            {
+                struct add_functor {
+                    int add_;
+                    add_functor(int add) : add_(add) { }
+                    int operator()(int value) { return value + add_; }
+                };
+
+                f1=add_functor(3);
+                CPPUNIT_ASSERT(f1(5)==8);
+            }
         }
     }
 
