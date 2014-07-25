@@ -85,6 +85,7 @@ class Cpp11Test : public CppUnit::TestCase
     // Define the test suite (simply one suite with all tests)
     CPPUNIT_TEST_SUITE(Cpp11Test);
     CPPUNIT_TEST(testStaticAssert);
+    CPPUNIT_TEST(testEnumStruct);
     CPPUNIT_TEST(testConstruct);
     CPPUNIT_TEST_EXCEPTION(testConstructLength,std::length_error);
     CPPUNIT_TEST_EXCEPTION(testUnderflow,std::out_of_range);
@@ -115,8 +116,37 @@ class Cpp11Test : public CppUnit::TestCase
 
     void testStaticAssert();
 
-    void testConstruct()
-    {
+    void testEnumStruct() {
+        enum old_enum_e { old_one, old_two, old_three };
+        enum old_enum_e old_enum1 = old_one;
+        old_enum_e old_enum2 = old_two;
+
+        enum struct new_enum_e { one, two, three };
+        new_enum_e new_enum { new_enum_e::one };
+
+        enum struct new_enum_char_e : char { one, two, three };
+        new_enum_char_e new_enum_char { new_enum_char_e::two };
+
+        enum struct new_enum_uint8_t_e : uint8_t { one, two, three };
+        new_enum_uint8_t_e new_enum_uint8_t { new_enum_uint8_t_e::three };
+
+        enum struct new_enum_uint8_t_101_e : uint8_t { one=101l, two, three };
+        new_enum_uint8_t_101_e new_enum_uint8_t_101;
+        new_enum_uint8_t_101 = new_enum_uint8_t_101_e::two;
+        CPPUNIT_ASSERT(static_cast<uint8_t>(new_enum_uint8_t_101) == 102);
+
+        // Check is_same<> first.
+        static_assert(std::is_same<char, char>::value, "not char 1");
+
+        typedef std::underlying_type<new_enum_char_e>::type char_type;
+        static_assert(std::is_same<char_type, char>::value, "not char 2");
+
+        typedef std::underlying_type<new_enum_uint8_t_101_e>::type uint8_type;
+        static_assert(std::is_same<uint8_type, uint8_t>::value, "not uint8_t");
+        CPPUNIT_ASSERT(static_cast<uint8_type>(new_enum_uint8_t_101) == 102);
+    }
+
+    void testConstruct() {
         {
             Vector<int> v(1);
             v[0]=-1;
