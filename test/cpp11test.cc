@@ -18,6 +18,20 @@
 #include <forward_list>
 #include <cppunit/extensions/HelperMacros.h>
 
+// Example: conditionally define noexcept when a type T is trivial
+// (i.e. "can be memcopied"). This is useful if do_something() uses
+// copy or assignment (which could be implemented and throw for
+// non-trivial types)
+template<typename T>
+struct noexcept_test {
+    void do_something(T t) noexcept(std::is_trivial<T>::value) { }
+    void do_something(T t, T t2) noexcept(noexcept(t.operator==(t2))) {
+        if (t.should_throw) {
+            throw std::exception{};
+        }
+    }
+};
+
 template<typename T, typename... Args>
 std::unique_ptr<T> make_unique(Args&&... args)
 {
@@ -157,6 +171,43 @@ class Cpp11Test : public CppUnit::TestCase
         // Just to check if it compiles.
         // Any exception should lead to terminate() / abort():
         // throw std::exception{};
+
+        struct trivial {
+            int i;
+            const bool should_throw { false };
+            bool operator==(const trivial &t) const noexcept { }
+        };
+        noexcept_test<trivial> test;
+        test.do_something(trivial{});
+        try {
+            // Our operator== is noexcept, so is do_something(T,T).
+            // If do_something would throw, terminate() would be called (we
+            // cannot catch noexcept).
+            // If do_something would throw, but program would not terminate
+            // (because of our catch), the test would have been failed.
+            // Unfortunately I'm too lazy to write this via shell scripts,
+            // so I tested this interactively only :))
+            // test.do_something(trivial{1}, trivial{2});
+        } catch(...) {
+        }
+
+        struct non_trivial {
+            int i;
+            const bool should_throw = true;
+            non_trivial(int) { }
+            bool operator==(const non_trivial &t) const { }
+        };
+        noexcept_test<non_trivial> test2;
+        test2.do_something(non_trivial{1});
+
+        try {
+            // Our operator== is NOT noexcept, so do_something(T,T) also is
+            // not, so if it throws, we could catch it.
+            test2.do_something(non_trivial{1}, non_trivial{2});
+        } catch(...) {
+            // throw; // <-- uncomment to see if it is working (aborting).
+        }
+
     }
 
     void testConstruct() {
