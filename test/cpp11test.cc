@@ -13,6 +13,9 @@
 #include <exception>
 #include <stdexcept>
 #include <algorithm>
+#include <vector>
+#include <iterator>
+#include <forward_list>
 #include <cppunit/extensions/HelperMacros.h>
 
 template<typename T, typename... Args>
@@ -28,6 +31,55 @@ int multiply3(const int a, const int b, const int c) { return a * b * c; }
 template<typename T>
 T mul3(const T a, const T b, const T c) { return a * b * c; }
 
+// Begin my_sort test
+template <typename RandomAccessIterator>
+void my_sort_helper(
+    RandomAccessIterator begin,
+    RandomAccessIterator end,
+    std::random_access_iterator_tag)
+{
+    sort(begin,end);
+}
+
+template <typename ForwardAccessIterator>
+void my_sort_helper(
+    ForwardAccessIterator begin,
+    ForwardAccessIterator end,
+    std::forward_iterator_tag)
+{
+    std::vector<typename ForwardAccessIterator::value_type> v{begin, end};
+
+    // or:
+    // template <typename ContainerOrIterator>
+    // using Value_type = typename ContainerOrIterator::value_type;
+    // std::vector<Value_type<ForwardAccessIterator>> v{begin, end};
+
+    sort(v.begin(), v.end());
+    copy(v.begin(), v.end(), begin);
+}
+
+template <typename Container>
+using Iterator_type = typename Container::iterator;
+
+template <typename Iterator>
+using Iterator_category
+    = typename std::iterator_traits<Iterator>::iterator_category;
+
+template <typename Container>
+void my_sort(Container &c)
+{
+    my_sort_helper(
+        c.begin(),
+        c.end(),
+        typename std::iterator_traits<
+            typename Container::iterator
+        >::iterator_category{});
+    // or:
+    // using Iter=Iterator_type<Container>;
+    // my_sort_helper(c.begin(), c.end(), Iterator_category<Iter>{});
+}
+// End my_sort test.
+
 class Cpp11Test : public CppUnit::TestCase
 {
     // Define the test suite (simply one suite with all tests)
@@ -39,6 +91,7 @@ class Cpp11Test : public CppUnit::TestCase
     CPPUNIT_TEST_EXCEPTION(testOverflow,std::out_of_range);
     CPPUNIT_TEST(testRangeFor);
     CPPUNIT_TEST(testEqualRange);
+    CPPUNIT_TEST(testMySort);
     CPPUNIT_TEST(testUniquePtr);
     CPPUNIT_TEST(testSharedPtr);
     CPPUNIT_TEST(testBind);
@@ -120,6 +173,31 @@ class Cpp11Test : public CppUnit::TestCase
         CPPUNIT_ASSERT(get_name2.first->stuff=="Second name A.");
         CPPUNIT_ASSERT((get_name2.first+1)->stuff=="Second name B.");
         CPPUNIT_ASSERT((get_name2.first+2)==get_name2.second);
+    }
+
+    void testMySort() {
+        {
+            std::forward_list<int> list { 7,3,5,1,9 };
+            my_sort(list);
+            auto i=list.begin();
+            CPPUNIT_ASSERT((*i++)==1);
+            CPPUNIT_ASSERT((*i++)==3);
+            CPPUNIT_ASSERT((*i++)==5);
+            CPPUNIT_ASSERT((*i++)==7);
+            CPPUNIT_ASSERT((*i++)==9);
+            CPPUNIT_ASSERT(i==list.end());
+        }
+        {
+            std::vector<int> v { 8,5,4,2,10 };
+            my_sort(v);
+            auto i=v.begin();
+            CPPUNIT_ASSERT((*i++)==2);
+            CPPUNIT_ASSERT((*i++)==4);
+            CPPUNIT_ASSERT((*i++)==5);
+            CPPUNIT_ASSERT((*i++)==8);
+            CPPUNIT_ASSERT((*i++)==10);
+            CPPUNIT_ASSERT(i==v.end());
+        }
     }
 
     void testUniquePtr() {
