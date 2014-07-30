@@ -454,7 +454,7 @@ class Cpp11Test : public CppUnit::TestCase
                 CPPUNIT_ASSERT(v>20);
                 CPPUNIT_ASSERT(v<800);
             }
-            if (1) {
+            if (0) {
                 std::cout << std::endl;
                 for (auto v: values) {
                     std::cout << v << std::endl;
