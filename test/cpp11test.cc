@@ -597,17 +597,17 @@ class Cpp11Test : public CppUnit::TestCase
             }
             Message get() {
                 std::unique_lock<std::mutex> lock { mmutex_ };
+                if (!mqueue_.empty()) {
+                    Message m = mqueue_.front();
+                    mqueue_.pop();
+                    std::cout << "had " << m << std::endl;
+                    return m;
+                }
+                // else: empty --> wait.
                 mcond_.wait(lock);
                 Message m = mqueue_.front();
-                // We must get all (e.g. concatenated), because we will not
-                // get another notify if already notified (i.e. if producer
-                // produces more than one at a time).
                 mqueue_.pop();
-                while (!mqueue_.empty()) {
-                    m += "," + mqueue_.front();
-                    mqueue_.pop();
-                }
-                std::cout << "get " << m << std::endl;
+                std::cout << "waited for " << m << std::endl;
                 return m;
             }
         };
@@ -628,6 +628,7 @@ class Cpp11Test : public CppUnit::TestCase
                 queue_.add("m3b");
                 std::this_thread::sleep_for(std::chrono::milliseconds{1000});
                 queue_.add("STOP");
+                std::cout << "Producer done" << std::endl;
             }
         };
 
@@ -638,9 +639,10 @@ class Cpp11Test : public CppUnit::TestCase
             void operator()() {
                 for(;;) {
                     Message m=queue_.get();
-                    std::cout << "got " << m << std::endl;
                     if (m=="STOP") break;
+                    std::cout << "consumed " << m << std::endl;
                 }
+                std::cout << "Consumer done" << std::endl;
             }
         };
 
