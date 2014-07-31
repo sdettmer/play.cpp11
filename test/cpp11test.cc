@@ -20,6 +20,8 @@
 #include <thread>
 #include <mutex>
 #include <chrono>
+#include <queue>
+#include <condition_variable>
 
 #include <cassert> // calls abort and allows backtrace in gdb.
 #include <cppunit/extensions/HelperMacros.h>
@@ -120,6 +122,7 @@ class Cpp11Test : public CppUnit::TestCase
     CPPUNIT_TEST(testFunction);
     CPPUNIT_TEST(testRandom);
     CPPUNIT_TEST(testThread);
+    CPPUNIT_TEST(testConsumer);
     CPPUNIT_TEST_SUITE_END();
 
   public:
@@ -575,6 +578,80 @@ class Cpp11Test : public CppUnit::TestCase
 
         t1.join();
         t2.join();
+    }
+
+    void testConsumer() {
+
+        using Message=std::string;
+        class Queue {
+            std::queue<Message> mqueue_;
+            std::condition_variable mcond_;
+            std::mutex mmutex_;
+
+          public:
+            void add(const Message &m) {
+                std::cout << "add " << m << std::endl;
+                std::unique_lock<std::mutex> lock { mmutex_ };
+                mqueue_.push(m);
+                mcond_.notify_one();
+            }
+            Message get() {
+                std::unique_lock<std::mutex> lock { mmutex_ };
+                mcond_.wait(lock);
+                Message m = mqueue_.front();
+                // We must get all (e.g. concatenated), because we will not
+                // get another notify if already notified (i.e. if producer
+                // produces more than one at a time).
+                mqueue_.pop();
+                while (!mqueue_.empty()) {
+                    m += "," + mqueue_.front();
+                    mqueue_.pop();
+                }
+                std::cout << "get " << m << std::endl;
+                return m;
+            }
+        };
+
+        class Producer {
+            Queue &queue_;
+          public:
+            Producer(Queue &queue) : queue_(queue) { }
+            void operator()() {
+                queue_.add("m0");
+                std::this_thread::sleep_for(std::chrono::milliseconds{1000});
+                queue_.add("m1");
+                std::this_thread::sleep_for(std::chrono::milliseconds{1000});
+                queue_.add("m2a");
+                queue_.add("m2b");
+                std::this_thread::sleep_for(std::chrono::milliseconds{1000});
+                queue_.add("m3a");
+                queue_.add("m3b");
+                std::this_thread::sleep_for(std::chrono::milliseconds{1000});
+                queue_.add("STOP");
+            }
+        };
+
+        class Consumer {
+            Queue &queue_;
+          public:
+            Consumer(Queue &queue) : queue_(queue) { }
+            void operator()() {
+                for(;;) {
+                    Message m=queue_.get();
+                    std::cout << "got " << m << std::endl;
+                    if (m=="STOP") break;
+                }
+            }
+        };
+
+        Queue queue;
+        // Consumer consumer(queue);
+        // Producer producer(queue);
+
+        std::thread producer { Producer(queue) };
+        std::thread consumer { Consumer(queue) };
+        producer.join();
+        consumer.join();
     }
 
   private:
