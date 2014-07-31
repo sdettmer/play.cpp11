@@ -17,6 +17,9 @@
 #include <iterator>
 #include <forward_list>
 #include <random>
+#include <thread>
+#include <mutex>
+#include <chrono>
 
 #include <cassert> // calls abort and allows backtrace in gdb.
 #include <cppunit/extensions/HelperMacros.h>
@@ -116,6 +119,7 @@ class Cpp11Test : public CppUnit::TestCase
     CPPUNIT_TEST(testBind);
     CPPUNIT_TEST(testFunction);
     CPPUNIT_TEST(testRandom);
+    CPPUNIT_TEST(testThread);
     CPPUNIT_TEST_SUITE_END();
 
   public:
@@ -533,6 +537,44 @@ class Cpp11Test : public CppUnit::TestCase
                 }
             }
         }
+    }
+
+    void testThread() {
+        struct MyThread {
+            const std::string name_;
+            MyThread() : name_("") { }
+            MyThread(const std::string &name) : name_(name) { }
+            void operator()() {
+                {
+                    if (name_ != "") {
+                        std::cout << "start " << name_ << std::endl;
+                        std::this_thread::sleep_for(
+                            std::chrono::milliseconds{1000});
+                        std::cout << "done " << name_ << std::endl;
+                    }
+                }
+            }
+        };
+
+        // Note that std::thread constructor copies.
+        std::thread t1 { MyThread { "t1" } };
+        std::thread t2 { MyThread { "t2" } };
+
+        {
+            std::mutex m;
+            std::unique_lock<std::mutex> lock { m };
+        }
+        {
+            std::mutex m1;
+            std::mutex m2;
+            std::unique_lock<std::mutex> lock1 { m1, std::defer_lock };
+            std::unique_lock<std::mutex> lock2 { m2, std::defer_lock };
+
+            std::lock(lock1, lock2);
+        }
+
+        t1.join();
+        t2.join();
     }
 
   private:

@@ -30,6 +30,32 @@ AC_LANG_POP()
 ])
 AC_STD_CHECK_STD
 
+AC_CACHE_CHECK(
+	[if compiler recognizes -pthread],
+	std_cv_gcc_pthread,
+	ac_save_CFLAGS=$CFLAGS
+	CFLAGS="$CFLAGS -pthread"
+	AC_LANG_SAVE
+	AC_LANG_C
+	AC_TRY_LINK([#include <pthread.h>],
+		[void *p = pthread_create;],
+		std_cv_gcc_pthread=yes,
+		std_cv_gcc_pthread=no
+	)
+	AC_LANG_RESTORE
+	CFLAGS=$ac_save_CFLAGS
+)
+if test $std_cv_gcc_pthread = yes
+then
+	std_threads=""
+	CFLAGS="$CFLAGS -pthread"
+	CXXFLAGS="$CXXFLAGS -pthread"
+else
+	dnl AC_CHECK_HEADERS(pthread.h) unreliable.
+	AC_CHECK_LIB(pthread,pthread_create)
+        dnl AC_CHECK_LIB(c_r,pthread_create)
+fi
+
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
