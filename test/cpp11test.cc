@@ -46,6 +46,20 @@ template<> struct FactorialNew<0> {
     enum { value = 1 };
 };
 
+
+// New return type declaration with "->"
+struct Outer {
+    struct Inner { };
+    Outer::Inner f1(Inner inner);  // Old style, see below.
+    auto f2(Inner inner) -> Inner; // New style, see below.
+};
+// Compiles with g++, but non-stanard:
+//   Inner Outer::f1(Inner inner) { return inner; }
+// Old style:
+Outer::Inner Outer::f1(Inner inner) { return inner; }
+// New style:
+auto Outer::f2(Inner inner) -> Inner { return inner; }
+
 // Example: conditionally define noexcept when a type T is trivial
 // (i.e. "can be memcopied"). This is useful if do_something() uses
 // copy or assignment (which could be implemented and throw for
@@ -474,6 +488,9 @@ class Cpp11Test : public CppUnit::TestCase
             f1 = [] (int value) { return value + 2; };
             CPPUNIT_ASSERT(f1(5)==7);
 
+            f1 = [] (int value) -> int { return value + 3; };
+            CPPUNIT_ASSERT(f1(4)==7);
+
             {
                 struct add_functor {
                     int add_;
@@ -481,9 +498,10 @@ class Cpp11Test : public CppUnit::TestCase
                     int operator()(int value) { return value + add_; }
                 };
 
-                f1=add_functor(3);
-                CPPUNIT_ASSERT(f1(5)==8);
+                f1=add_functor(10);
+                CPPUNIT_ASSERT(f1(5)==15);
             }
+
         }
     }
 
