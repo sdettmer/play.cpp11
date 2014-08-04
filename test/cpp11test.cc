@@ -9,6 +9,7 @@
 #include "cpp11/cpp11.h"
 
 #include <string>
+#include <locale>
 #include <map>
 #include <exception>
 #include <stdexcept>
@@ -143,6 +144,7 @@ class Cpp11Test : public CppUnit::TestCase
     CPPUNIT_TEST(testStaticAssert);
     CPPUNIT_TEST(testFactorialMeta);
     CPPUNIT_TEST(testEnumStruct);
+    CPPUNIT_TEST(testString);
     CPPUNIT_TEST(testNoExcept);
     CPPUNIT_TEST(testConstruct);
     CPPUNIT_TEST_EXCEPTION(testConstructLength,std::length_error);
@@ -244,6 +246,31 @@ class Cpp11Test : public CppUnit::TestCase
         typedef std::underlying_type<new_enum_uint8_t_101_e>::type uint8_type;
         static_assert(std::is_same<uint8_type, uint8_t>::value, "not uint8_t");
         CPPUNIT_ASSERT(static_cast<uint8_type>(new_enum_uint8_t_101) == 102);
+    }
+
+    void testString() {
+        const char     *utf8  = u8"UTF-8";
+        const char16_t *utf16 = u"UTF-16";
+        const char32_t *utf32 = U"UTF-32";
+        const char     *raw   = R"(RAW without specials \n)";
+
+        CPPUNIT_ASSERT(std::string(utf8)=="UTF-8");
+        std::u16string u16str(utf16);
+        {
+            std::u16string u16str(u"UTF-16");
+            std::string    str;
+            // Not implemented in libdst++ I use with gcc-4.8:
+            // std::wstring_convert<
+            //    std::codecvt_utf8_utf16<char16_t>, char16_t> converter;
+            // str = converter.to_bytes(u16str.c_str());
+        }
+        // CPPUNIT_ASSERT(u16str==std::string("UTF-16"));
+        //CPPUNIT_ASSERT(std::u32string(utf32)=="UTF-32");
+
+        std::string rawstr(raw);
+        CPPUNIT_ASSERT(rawstr=="RAW without specials \\n");
+        CPPUNIT_ASSERT(utf16!=nullptr);
+        CPPUNIT_ASSERT(utf32!=nullptr);
     }
 
     void testNoExcept() noexcept {
