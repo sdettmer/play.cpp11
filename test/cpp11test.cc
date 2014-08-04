@@ -26,6 +26,26 @@
 #include <cassert> // calls abort and allows backtrace in gdb.
 #include <cppunit/extensions/HelperMacros.h>
 
+
+// Factorial meta "old" style:
+template<int N> struct Factorial {
+    enum { value = N * Factorial<N-1>::value };
+};
+template<> struct Factorial<0> {
+    enum { value = 1 };
+};
+// Factorial meta "new" style:
+constexpr int factorial_func(const int value) {
+    return (value==0) ? 1 : value*factorial_func(value-1);
+}
+template<int N> struct FactorialNew {
+    enum { value = N * FactorialNew<N-1>::value };
+    constexpr int operator()() { return value; };
+};
+template<> struct FactorialNew<0> {
+    enum { value = 1 };
+};
+
 // Example: conditionally define noexcept when a type T is trivial
 // (i.e. "can be memcopied"). This is useful if do_something() uses
 // copy or assignment (which could be implemented and throw for
@@ -107,6 +127,7 @@ class Cpp11Test : public CppUnit::TestCase
     // Define the test suite (simply one suite with all tests)
     CPPUNIT_TEST_SUITE(Cpp11Test);
     CPPUNIT_TEST(testStaticAssert);
+    CPPUNIT_TEST(testFactorialMeta);
     CPPUNIT_TEST(testEnumStruct);
     CPPUNIT_TEST(testNoExcept);
     CPPUNIT_TEST(testConstruct);
@@ -141,6 +162,33 @@ class Cpp11Test : public CppUnit::TestCase
     { }
 
     void testStaticAssert();
+
+    void testFactorialMeta() {
+        static_assert(Factorial<0>::value==1,   "<0>");
+        static_assert(Factorial<1>::value==1,   "<1>");
+        static_assert(Factorial<2>::value==2,   "<2>");
+        static_assert(Factorial<3>::value==2*3, "<3>");
+        static_assert(Factorial<5>::value==120, "<5>");
+
+        static_assert(factorial_func(0)==1,     "(0)");
+        static_assert(factorial_func(1)==1,     "(1)");
+        static_assert(factorial_func(2)==2,     "(2)");
+        static_assert(factorial_func(3)==2*3,   "(3)");
+        static_assert(factorial_func(5)==120,   "(5)");
+
+        static_assert(Factorial<10>::value==factorial_func(10),"10");
+        static_assert(FactorialNew<10>()()==factorial_func(10),"10");
+        static_assert(FactorialNew<10>::value==factorial_func(10),"10");
+
+        char ref[6*8];
+        char oldway[Factorial<3>::value*8];
+        char newway[factorial_func(3)*8];
+        char newwaytempl[FactorialNew<3>()()*8];
+
+        static_assert(sizeof(oldway)==sizeof(ref),"oldway");
+        static_assert(sizeof(newway)==sizeof(ref),"newway");
+        static_assert(sizeof(newwaytempl)==sizeof(ref),"newwaytempl");
+    }
 
     void testEnumStruct() {
         enum old_enum_e { old_none, old_one, old_two, old_three };
