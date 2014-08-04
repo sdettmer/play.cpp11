@@ -623,15 +623,15 @@ class Cpp11Test : public CppUnit::TestCase
           public:
             Producer(Queue &queue) : queue_(queue) { }
             void operator()() {
-                queue_.add("m0");
+                queue_.add("MSG_0");
                 std::this_thread::sleep_for(std::chrono::milliseconds{1000});
-                queue_.add("m1");
+                queue_.add("MSG_1");
                 std::this_thread::sleep_for(std::chrono::milliseconds{1000});
-                queue_.add("m2a");
-                queue_.add("m2b");
+                queue_.add("MSG_2a");
+                queue_.add("MSG_2b");
                 std::this_thread::sleep_for(std::chrono::milliseconds{1000});
-                queue_.add("m3a");
-                queue_.add("m3b");
+                queue_.add("MSG_3a");
+                queue_.add("MSG_3b");
                 std::this_thread::sleep_for(std::chrono::milliseconds{1000});
                 queue_.add("STOP");
                 std::cout << "Producer done" << std::endl;
