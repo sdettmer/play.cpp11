@@ -16,6 +16,7 @@ dummy_LDADD=libcpp11.a
 TESTS=testrunner
 check_PROGRAMS=testrunner
 testrunner_SOURCES=test/testrunner.cc test/cpp11test.cc \
+		   test/randomtest.cc \
 		   test/mysorttest.cc
 testrunner_DEPENDENCIES=libcpp11.a
 testrunner_LDADD=libcpp11.a $(CPPUNIT_LIBS)

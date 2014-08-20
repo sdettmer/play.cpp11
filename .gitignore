@@ -28,10 +28,12 @@ src/cpp11/.dirstamp
 src/cpp11/cpp11.o
 src/cpp11/factorial.o
 src/cpp11/mysort.o
+src/cpp11/random.o
 test/.dirstamp
 test/cpp11test.o
 test/myvectortest.o
 test/mysorttest.o
+test/randomtest.o
 test/testrunner.o
 testrunner
 test-suite.log
