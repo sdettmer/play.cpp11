@@ -192,7 +192,7 @@ class Cpp11Test : public CppUnit::TestCase
         struct trivial {
             int i;
             const bool should_throw { false };
-            bool operator==(const trivial &t) const noexcept { }
+            bool operator==(const trivial &t) const noexcept { return false; }
         };
         noexcept_test<trivial> test;
         test.do_something(trivial{});
@@ -212,7 +212,7 @@ class Cpp11Test : public CppUnit::TestCase
             int i;
             const bool should_throw = true;
             non_trivial(int) { }
-            bool operator==(const non_trivial &t) const { }
+            bool operator==(const non_trivial &t) const { return false; }
         };
         noexcept_test<non_trivial> test2;
         test2.do_something(non_trivial{1});
