@@ -2,7 +2,9 @@
 lib_LIBRARIES = libcpp11.a
 libcpp11_a_SOURCES = src/cpp11/cpp11.h src/cpp11/cpp11.cc \
 		     src/cpp11/factorial.h src/cpp11/factorial.cc \
-		     src/cpp11/mysort.h src/cpp11/mysort.cc
+		     src/cpp11/mysort.h src/cpp11/mysort.cc \
+		     src/cpp11/threading.h src/cpp11/threading.cc \
+		     src/cpp11/consumer.h src/cpp11/consumer.cc
 libcpp11_HEADERS=src/cpp11/cpp11.h
 libcpp11dir=$(includedir)/cpp11
 

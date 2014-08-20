@@ -8,6 +8,8 @@
 
 #include "cpp11/cpp11.h"
 #include "cpp11/mysort.h"
+#include "cpp11/threading.h"
+#include "cpp11/consumer.h"
 
 #include <string>
 #include <locale>
@@ -17,11 +19,6 @@
 #include <algorithm>
 #include <vector>
 #include <iterator>
-#include <thread>
-#include <mutex>
-#include <chrono>
-#include <queue>
-#include <condition_variable>
 
 #include <cassert> // calls abort and allows backtrace in gdb.
 #include <cppunit/extensions/HelperMacros.h>
@@ -407,117 +404,11 @@ class Cpp11Test : public CppUnit::TestCase
     }
 
     void testThread() {
-        struct MyThread {
-            const std::string name_;
-            MyThread() : name_("") { }
-            MyThread(const std::string &name) : name_(name) { }
-            void operator()() {
-                {
-                    if (name_ != "") {
-                        std::cout << "start " << name_ << std::endl;
-                        std::this_thread::sleep_for(
-                            std::chrono::milliseconds{1000});
-                        std::cout << "done " << name_ << std::endl;
-                    }
-                }
-            }
-        };
-
-        // Note that std::thread constructor copies.
-        std::thread t1 { MyThread { "t1" } };
-        std::thread t2 { MyThread { "t2" } };
-
-        {
-            std::mutex m;
-            std::unique_lock<std::mutex> lock { m };
-        }
-        {
-            std::mutex m1;
-            std::mutex m2;
-            std::unique_lock<std::mutex> lock1 { m1, std::defer_lock };
-            std::unique_lock<std::mutex> lock2 { m2, std::defer_lock };
-
-            std::lock(lock1, lock2);
-        }
-
-        t1.join();
-        t2.join();
+        threading_test();
     }
 
     void testConsumer() {
-
-        using Message=std::string;
-        class Queue {
-            std::queue<Message> mqueue_;
-            std::condition_variable mcond_;
-            std::mutex mmutex_;
-
-          public:
-            void add(const Message &m) {
-                std::cout << "add " << m << std::endl;
-                std::unique_lock<std::mutex> lock { mmutex_ };
-                mqueue_.push(m);
-                mcond_.notify_one();
-            }
-            Message get() {
-                std::unique_lock<std::mutex> lock { mmutex_ };
-                if (!mqueue_.empty()) {
-                    Message m = mqueue_.front();
-                    mqueue_.pop();
-                    std::cout << "had " << m << std::endl;
-                    return m;
-                }
-                // else: empty --> wait.
-                mcond_.wait(lock);
-                Message m = mqueue_.front();
-                mqueue_.pop();
-                std::cout << "waited for " << m << std::endl;
-                return m;
-            }
-        };
-
-        class Producer {
-            Queue &queue_;
-          public:
-            Producer(Queue &queue) : queue_(queue) { }
-            void operator()() {
-                queue_.add("MSG_0");
-                std::this_thread::sleep_for(std::chrono::milliseconds{1000});
-                queue_.add("MSG_1");
-                std::this_thread::sleep_for(std::chrono::milliseconds{1000});
-                queue_.add("MSG_2a");
-                queue_.add("MSG_2b");
-                std::this_thread::sleep_for(std::chrono::milliseconds{1000});
-                queue_.add("MSG_3a");
-                queue_.add("MSG_3b");
-                std::this_thread::sleep_for(std::chrono::milliseconds{1000});
-                queue_.add("STOP");
-                std::cout << "Producer done" << std::endl;
-            }
-        };
-
-        class Consumer {
-            Queue &queue_;
-          public:
-            Consumer(Queue &queue) : queue_(queue) { }
-            void operator()() {
-                for(;;) {
-                    Message m=queue_.get();
-                    if (m=="STOP") break;
-                    std::cout << "consumed " << m << std::endl;
-                }
-                std::cout << "Consumer done" << std::endl;
-            }
-        };
-
-        Queue queue;
-        // Consumer consumer(queue);
-        // Producer producer(queue);
-
-        std::thread producer { Producer(queue) };
-        std::thread consumer { Consumer(queue) };
-        producer.join();
-        consumer.join();
+        consumer_test();
     }
 
   private:
