@@ -1,6 +1,7 @@
 # The `interface implementation' in form of a library:
 lib_LIBRARIES = libcpp11.a
-libcpp11_a_SOURCES = src/cpp11/cpp11.h src/cpp11/cpp11.cc
+libcpp11_a_SOURCES = src/cpp11/cpp11.h src/cpp11/cpp11.cc \
+		     src/cpp11/factorial.h src/cpp11/factorial.cc
 libcpp11_HEADERS=src/cpp11/cpp11.h
 libcpp11dir=$(includedir)/cpp11
 

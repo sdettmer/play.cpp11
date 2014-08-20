@@ -3,7 +3,7 @@
  *
  * Examples in form of test code demonstrating C++ 2011.
  *
- * \file test/cpp11.h A simple Vector class.
+ * \file cpp11/cpp11.h A simple Vector class.
  */
 
 #ifndef CPP11_CPP11_H
