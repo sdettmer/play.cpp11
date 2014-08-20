@@ -27,8 +27,11 @@ cpp11-*.tar.gz
 src/cpp11/.dirstamp
 src/cpp11/cpp11.o
 src/cpp11/factorial.o
+src/cpp11/mysort.o
 test/.dirstamp
 test/cpp11test.o
+test/myvectortest.o
+test/mysorttest.o
 test/testrunner.o
 testrunner
 test-suite.log
