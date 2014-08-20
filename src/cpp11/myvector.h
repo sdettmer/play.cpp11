@@ -3,33 +3,34 @@
  *
  * Examples in form of test code demonstrating C++ 2011.
  *
- * \file cpp11/cpp11.h A simple Vector class.
+ * \file cpp11/myvector.h A simple own vector class, demonstrating
+ *       std::vector ideas.
  */
 
-#ifndef CPP11_CPP11_H
-#define CPP11_CPP11_H 1
+#ifndef CPP11_MYVECTOR_H
+#define CPP11_MYVECTOR_H 1
 
+#include <list>
 #include <string>
-#include <exception>
 #include <stdexcept>
 
 template<typename T>
-class Vector
+class MyVector
 {
 public:
-    Vector()
+    MyVector()
         : elem{nullptr} { }
 
-    explicit Vector(int size)
+    explicit MyVector(int size)
         : sz{static_cast<size_t>(size)}
     {
         if (size<0) {
-            throw std::length_error("constructing Vector");
+            throw std::length_error("constructing MyVector");
         }
         elem=new T[size];
     }
 
-    Vector(std::initializer_list<T> list)
+    MyVector(std::initializer_list<T> list)
         : elem{new T[list.size()]}, sz{list.size()}
     {
         std::copy(list.begin(), list.end(), elem);
@@ -39,20 +40,20 @@ public:
         // sz=list.size();
     }
 
-    Vector(const Vector<T> &v)
+    MyVector(const MyVector<T> &v)
         : elem{new T[v.s]}, sz{v.sz}
     {
         std::copy(v.begin(), v.end(), elem);
     }
 
-    Vector(Vector<T> &&v)
+    MyVector(MyVector<T> &&v)
         : elem{v.elem}, sz{v.sz} { v.elem=NULL; v.sz=0; }
 
-    virtual ~Vector() { if (elem) delete[] elem; }
+    virtual ~MyVector() { if (elem) delete[] elem; }
 
-    virtual Vector<T> &operator=(const Vector<T> &v);
+    virtual MyVector<T> &operator=(const MyVector<T> &v);
 
-    virtual Vector<T> &operator=(Vector<T> &&v);
+    virtual MyVector<T> &operator=(MyVector<T> &&v);
 
     virtual T& operator[](int i);
     virtual const T& operator[](int i) const;
@@ -71,7 +72,7 @@ private:
 };
 
 template <typename T>
-Vector<T> &Vector<T>::operator=(const Vector<T> &v)
+inline MyVector<T> &MyVector<T>::operator=(const MyVector<T> &v)
 {
     if (elem) delete[] elem;
     elem=new T[v.sz];
@@ -82,7 +83,7 @@ Vector<T> &Vector<T>::operator=(const Vector<T> &v)
 
 
 template <typename T>
-Vector<T> &Vector<T>::operator=(Vector<T> &&v)
+inline MyVector<T> &MyVector<T>::operator=(MyVector<T> &&v)
 {
     elem=v.elem;
     v.elem=nullptr;
@@ -92,7 +93,7 @@ Vector<T> &Vector<T>::operator=(Vector<T> &&v)
 }
 
 template <typename T>
-T& Vector<T>::operator[](int i)
+inline T& MyVector<T>::operator[](int i)
 {
     if (i>=0 && i<size()) {
         return elem[i];
@@ -102,7 +103,7 @@ T& Vector<T>::operator[](int i)
 }
 
 template <typename T>
-const T& Vector<T>::operator[](int i) const
+inline const T& MyVector<T>::operator[](int i) const
 {
     if (i>=0 && i<size()) {
         return elem[i];
@@ -111,6 +112,7 @@ const T& Vector<T>::operator[](int i) const
     }
 }
 
-#endif // CPP11_CPP11_
+
+#endif // CPP11_MYVECTOR_H
 
 /* vim: set ts=4 sw=4 tw=76: */

@@ -8,7 +8,7 @@
 
 #include <string>
 #include <iostream>
-#include "cpp11/cpp11.h"
+#include <vector>
 
 #include <cppunit/CompilerOutputter.h>
 #include <cppunit/extensions/TestFactoryRegistry.h>
@@ -16,7 +16,7 @@
 
 int main()
 {
-    Vector<std::string> v{"Hello,"," world!"};
+    std::vector<std::string> v{"Hello,"," world!"};
     for (auto &e: v) {
         std::cout << e;
     }

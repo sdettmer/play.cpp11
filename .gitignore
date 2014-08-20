@@ -26,6 +26,7 @@ test-driver
 cpp11-*.tar.gz
 src/cpp11/.dirstamp
 src/cpp11/cpp11.o
+src/cpp11/myvector.o
 src/cpp11/factorial.o
 src/cpp11/mysort.o
 src/cpp11/random.o
