@@ -143,18 +143,24 @@ class Cpp11Test : public CppUnit::TestCase
     void testStaticAssert();
 
     void testEnumStruct() {
-        enum old_enum_e { old_one, old_two, old_three };
+        enum old_enum_e { old_none, old_one, old_two, old_three };
         enum old_enum_e old_enum1 = old_one;
         old_enum_e old_enum2 = old_two;
+        CPPUNIT_ASSERT(static_cast<int>(old_enum1) == 1);
+        CPPUNIT_ASSERT(static_cast<int>(old_enum2) == 2);
 
-        enum struct new_enum_e { one, two, three };
+        enum struct new_enum_e { none, one, two, three };
         new_enum_e new_enum { new_enum_e::one };
 
-        enum struct new_enum_char_e : char { one, two, three };
-        new_enum_char_e new_enum_char { new_enum_char_e::two };
+        CPPUNIT_ASSERT(static_cast<int>(new_enum) == 1);
 
-        enum struct new_enum_uint8_t_e : uint8_t { one, two, three };
+        enum struct new_enum_char_e : char { none, one, two, three };
+        new_enum_char_e new_enum_char { new_enum_char_e::two };
+        CPPUNIT_ASSERT(static_cast<int>(new_enum_char) == 2);
+
+        enum struct new_enum_uint8_t_e : uint8_t { none, one, two, three };
         new_enum_uint8_t_e new_enum_uint8_t { new_enum_uint8_t_e::three };
+        CPPUNIT_ASSERT(static_cast<int>(new_enum_uint8_t) == 3);
 
         enum struct new_enum_uint8_t_101_e : uint8_t { one=101l, two, three };
         new_enum_uint8_t_101_e new_enum_uint8_t_101;
