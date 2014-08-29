@@ -1,6 +1,7 @@
 # The `interface implementation' in form of a library:
 lib_LIBRARIES = libcpp11.a
-libcpp11_a_SOURCES = src/cpp11/myvector.h src/cpp11/myvector.cc \
+libcpp11_a_SOURCES = src/cpp11/literals.h src/cpp11/literals.cc \
+		     src/cpp11/myvector.h src/cpp11/myvector.cc \
 		     src/cpp11/factorial.h src/cpp11/factorial.cc \
 		     src/cpp11/mysort.h src/cpp11/mysort.cc \
 		     src/cpp11/threading.h src/cpp11/threading.cc \
@@ -18,6 +19,7 @@ dummy_LDADD=libcpp11.a
 TESTS=testrunner
 check_PROGRAMS=testrunner
 testrunner_SOURCES=test/testrunner.cc test/cpp11test.cc \
+		   test/literalstest.cc \
 		   test/randomtest.cc \
 		   test/myvectortest.cc \
 		   test/mysorttest.cc
